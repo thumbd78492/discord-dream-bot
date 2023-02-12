@@ -12,7 +12,7 @@ export type CardInput = {
 }
 
 export type CardCategory = '體魄' | '感知' | '靈性' | '社會' | '衍生牌' | '狀態牌'
-const ALL_CARD_CATEGORY_TUPLE = exhaustiveStringTuple<CardCategory>()(
+export const ALL_CARD_CATEGORY_TUPLE = exhaustiveStringTuple<CardCategory>()(
   '體魄',
   '感知',
   '靈性',
@@ -28,7 +28,7 @@ export const cardCategoryOf: (cate: string) => E.Either<InvalidParameterError, C
     )
 
 export type CardDreamCategory = '普通' | '美夢' | '惡夢'
-const ALL_CARD_DREAM_CATEGORY_TUPLE = exhaustiveStringTuple<CardDreamCategory>()('普通', '美夢', '惡夢')
+export const ALL_CARD_DREAM_CATEGORY_TUPLE = exhaustiveStringTuple<CardDreamCategory>()('普通', '美夢', '惡夢')
 export const cardDreamCategoryOf: (cate: string) => E.Either<InvalidParameterError, CardDreamCategory> = (cate) =>
   TSP.match(cate)
     .with('普通', '美夢', '惡夢', (x) => E.right(x))
@@ -46,5 +46,15 @@ export type CardInDb = {
   description: string
   author: string
   createdTime: string
+  updatedTime: string
+}
+
+export type CardUpdateDb = {
+  name: string
+  cost?: number
+  category?: string
+  dream_category?: string
+  description?: string
+  author: string
   updatedTime: string
 }
