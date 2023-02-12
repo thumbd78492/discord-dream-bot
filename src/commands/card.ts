@@ -296,10 +296,55 @@ const playCardSlashCommand: SlashCommand = {
   }
 }
 
+const deleteCardSlashCommand: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('delete_card')
+    .setDescription('Replies with the DELETED card information by given card name. (*) means required')
+    .addStringOption((option) =>
+      option.setName('card_name').setDescription('(*) The card name you want to DELETE').setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('delete_card_name')
+        .setDescription('(*) Should be the same as card_name, make sure you want to DELETE this card.')
+        .setRequired(true)
+    ),
+
+  async execute(interaction: CommandInteraction) {
+    await pipe(
+      E.Do,
+      E.apS('card_name', getStringField(interaction)('card_name')),
+      E.apS('delete_card_name', getStringField(interaction)('delete_card_name')),
+      E.chain(({ card_name, delete_card_name }) =>
+        card_name === delete_card_name
+          ? E.right(card_name)
+          : E.left(
+              invalidParameterErrorOf(
+                `card_name "${card_name}" is not the same as delete_card_name "${delete_card_name}"`
+              )
+            )
+      ),
+      TE.fromEither,
+      TE.chainW((name) =>
+        pipe(
+          name,
+          repo.deleteCard,
+          TE.chainW(TE.fromOption(() => notFoundErrorOf(`Cannot find card with name: ${name}`)))
+        )
+      ),
+      TE.match(
+        (e) => interaction.reply(`${e._tag}: ${e.msg}`),
+        (card) => interaction.reply(JSON.stringify(card, null, 2))
+      )
+    )()
+  }
+}
+
 export const cardSlashCommands = [
   getCardSlashCommand,
   getAllCardSlashCommand,
   postCardSlashCommand,
   putCardSlashCommand,
-  playCardSlashCommand
+  playCardSlashCommand,
+  deleteCardSlashCommand
 ]
