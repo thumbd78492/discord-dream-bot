@@ -9,12 +9,13 @@ import { sequenceS } from 'fp-ts/Apply'
 import { AppError } from './types/errors'
 import { AppConfig, readEnvironmentVariable, DiscordConfig, MongoConfig } from './types/config'
 import { loginBot, setBotListener } from './bot'
-import { cardSlashCommands } from './commands/card'
 import { establishMongoConnection } from './plugins/mongo'
 import { pipe } from 'fp-ts/lib/function'
+import { cardSlashCommandGroup } from './commands/card'
+import { slashCommandGroupOf } from './types/command'
 
 // register commands
-const commandList = [PingSlashCommand].concat(cardSlashCommands)
+const commandGroup = [cardSlashCommandGroup]
 
 // Read .env file (if exist)
 dotenv.config()
@@ -50,9 +51,9 @@ pipe(
   appConfig,
   TE.fromEither,
   TE.chainFirstW(establishMongoConnection),
-  TE.chainFirst(deploySlashCommands(commandList)),
+  TE.chainFirst(deploySlashCommands(commandGroup)),
   TE.chainFirst(loginBot(client)),
-  TE.chain(() => TE.of(setBotListener(client)(commandList))),
+  TE.chain(() => TE.of(setBotListener(client)(commandGroup))),
   TE.match(
     (e) => console.log(`${e._tag}: ${e.msg}`),
     () => console.log('Deploy commands and login successfully!')

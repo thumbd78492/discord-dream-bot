@@ -1,5 +1,5 @@
-import { SlashCommandBuilder, CommandInteraction, EmbedBuilder } from 'discord.js'
-import { SlashCommand } from '../types/command'
+import { SlashCommandBuilder, CommandInteraction, EmbedBuilder, SlashCommandSubcommandBuilder } from 'discord.js'
+import { SlashCommand, SlashCommandSubCommand, slashCommandGroupOf } from '../types/command'
 import { pipe, flow, identity } from 'fp-ts/lib/function'
 import * as E from 'fp-ts/lib/Either'
 import * as O from 'fp-ts/lib/Option'
@@ -32,12 +32,12 @@ import {
   getWithDefaultStringField
 } from './commandInteraction'
 
-const getCardSlashCommand: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('get_card')
-    .setDescription('Replies with the card information by given card name. (*) means required')
+const getCardSlashCommandSubCommand: SlashCommandSubCommand = {
+  data: new SlashCommandSubcommandBuilder()
+    .setName('get')
+    .setDescription('根據card_name，給出對應的卡片資訊。(*)代表必填。')
     .addStringOption((option) =>
-      option.setName('card_name').setDescription('(*) The card name you want to query').setRequired(true)
+      option.setName('card_name').setDescription('(*) 您想要查詢的卡名。').setRequired(true)
     ),
   async execute(interaction: CommandInteraction) {
     await pipe(
@@ -55,10 +55,10 @@ const getCardSlashCommand: SlashCommand = {
   }
 }
 
-const getAllCardSlashCommand: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('get_all_card')
-    .setDescription('Replies with the card name of all cards in the database'),
+const getAllCardSlashCommandSubCommand: SlashCommandSubCommand = {
+  data: new SlashCommandSubcommandBuilder()
+    .setName('get_all')
+    .setDescription('列出所有資料庫內已儲存的卡名，若需要詳細資訊，請再使用/card get {card_name}查詢。'),
   async execute(interaction: CommandInteraction) {
     await pipe(
       repo.getCardNames(),
@@ -70,26 +70,20 @@ const getAllCardSlashCommand: SlashCommand = {
   }
 }
 
-const postCardSlashCommand: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('post_card')
-    .setDescription('create a new card to the database. (*) means required')
+const postCardSlashCommandSubCommand: SlashCommandSubCommand = {
+  data: new SlashCommandSubcommandBuilder()
+    .setName('post')
+    .setDescription('在資料庫中建立一張新卡片。(*)代表必填。')
     .addStringOption((option) =>
-      option
-        .setName('card_name')
-        .setDescription('(*) The card name you want to save, should be unique for whole system')
-        .setRequired(true)
+      option.setName('card_name').setDescription('(*) 新卡片的卡名，對於整個系統而言必須是唯一的。').setRequired(true)
     )
     .addIntegerOption((option) =>
-      option
-        .setName('cost')
-        .setDescription('(*) The cost of the card. Should be a integer. e.x. 0, 1, 6, -1')
-        .setRequired(true)
+      option.setName('cost').setDescription('(*) 新卡片的消耗，必須是一個整數。如：0, 1, 6, -1。').setRequired(true)
     )
     .addStringOption((option) =>
       option
         .setName('category')
-        .setDescription(`(*) The category of the card. Should be one of "${ALL_CARD_CATEGORY_TUPLE.join('", "')}"`)
+        .setDescription(`(*) 新卡片的種類。必須是"${ALL_CARD_CATEGORY_TUPLE.join('", "')}"的其中一種。`)
         .setChoices(...ALL_CARD_CATEGORY_TUPLE.map((x) => ({ name: x, value: x })))
         .setRequired(true)
     )
@@ -97,15 +91,11 @@ const postCardSlashCommand: SlashCommand = {
       option
         .setName('dream_category')
         .setDescription(
-          `The card is a dream card or not. Should be one of "${ALL_CARD_DREAM_CATEGORY_TUPLE.join(
-            '", "'
-          )}", default is "普通"`
+          `新卡片是否具有夢屬性。必須是"${ALL_CARD_DREAM_CATEGORY_TUPLE.join('", "')}"的其中一種。預設為"普通"。`
         )
         .setChoices(...ALL_CARD_DREAM_CATEGORY_TUPLE.map((x) => ({ name: x, value: x })))
     )
-    .addStringOption((option) =>
-      option.setName('description').setDescription('The description of the card. Default is "N/A"')
-    ),
+    .addStringOption((option) => option.setName('description').setDescription('新卡片的敘述。預設為"N/A"。')),
   async execute(interaction: CommandInteraction) {
     await pipe(
       E.Do,
@@ -131,38 +121,34 @@ const postCardSlashCommand: SlashCommand = {
   }
 }
 
-const putCardSlashCommand: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('update_card')
-    .setDescription('update a new card to the database. (*) means required')
+const putCardSlashCommandSubCommand: SlashCommandSubCommand = {
+  data: new SlashCommandSubcommandBuilder()
+    .setName('update')
+    .setDescription('從資料庫中更新一張卡片。(*)代表必填。')
     .addStringOption((option) =>
       option
         .setName('card_name')
-        .setDescription('(*) The card name you want to update, should have been restored in the database')
+        .setDescription('(*)您想要更新的卡片名稱，必須已被儲存在資料庫中，假如您想確認，請使用/card get_all。')
         .setRequired(true)
     )
     .addIntegerOption((option) =>
-      option.setName('cost').setDescription('The cost of the card. Should be a integer. e.x. 0, 1, 6, -1')
+      option.setName('cost').setDescription('卡片的消耗，必須是一個整數。如：0, 1, 6, -1。')
     )
     .addStringOption((option) =>
       option
         .setName('category')
-        .setDescription(`The category of the card. Should be one of "${ALL_CARD_CATEGORY_TUPLE.join('", "')}"`)
+        .setDescription(`卡片的種類。必須是"${ALL_CARD_CATEGORY_TUPLE.join('", "')}"的其中一中。`)
         .setChoices(...ALL_CARD_CATEGORY_TUPLE.map((x) => ({ name: x, value: x })))
     )
     .addStringOption((option) =>
       option
         .setName('dream_category')
         .setDescription(
-          `The card is a dream card or not. Should be one of "${ALL_CARD_DREAM_CATEGORY_TUPLE.join(
-            '", "'
-          )}", default is "普通"`
+          `卡片是否具有夢屬性。必須是"${ALL_CARD_DREAM_CATEGORY_TUPLE.join('", "')}"的其中一種，預設值為"普通"。`
         )
         .setChoices(...ALL_CARD_DREAM_CATEGORY_TUPLE.map((x) => ({ name: x, value: x })))
     )
-    .addStringOption((option) =>
-      option.setName('description').setDescription('The description of the card. Default is an empty string')
-    ),
+    .addStringOption((option) => option.setName('description').setDescription('新卡片的敘述。')),
   async execute(interaction: CommandInteraction) {
     await pipe(
       E.Do,
@@ -201,7 +187,7 @@ const putCardSlashCommand: SlashCommand = {
         pipe(
           card,
           repo.updateCard,
-          TE.chainW(TE.fromOption(() => notFoundErrorOf(`Cannot find card with name: ${card.name}`)))
+          TE.chainW(TE.fromOption(() => notFoundErrorOf(`找不到卡名為：${card.name}的卡片。`)))
         )
       ),
       TE.map(
@@ -224,17 +210,22 @@ const putCardSlashCommand: SlashCommand = {
   }
 }
 
-const playCardSlashCommand: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('play_card')
-    .setDescription('Generate play card message by given card name. (*) means required')
+const playCardSlashCommandSubCommand: SlashCommandSubCommand = {
+  data: new SlashCommandSubcommandBuilder()
+    .setName('play')
+    .setDescription('根據輸入的資訊，產生出牌的訊息。(*)代表必填。')
     .addStringOption((option) =>
-      option.setName('card_name').setDescription('(*) The card name you want to query').setRequired(true)
+      option
+        .setName('card_name')
+        .setDescription('(*) 您想要打出的卡片卡名，必須已被儲存在資料庫中，假如您想確認，請使用/card get_all。')
+        .setRequired(true)
     )
-    .addIntegerOption((option) => option.setName('curr_mana').setDescription('Current mana of the player'))
-    .addStringOption((option) => option.setName('player').setDescription('The name of the player'))
-    .addStringOption((option) => option.setName('target').setDescription('The target of the card'))
-    .addStringOption((option) => option.setName('supplementary').setDescription('The supplementary information.')),
+    .addIntegerOption((option) => option.setName('curr_mana').setDescription('出牌玩家目前的魔力量。'))
+    .addStringOption((option) => option.setName('player').setDescription('出牌玩家的名稱。'))
+    .addStringOption((option) => option.setName('target').setDescription('卡牌目標的名稱。'))
+    .addStringOption((option) =>
+      option.setName('supplementary').setDescription('制式的出牌訊息存在許多不足，可在此補充敘述。')
+    ),
   async execute(interaction: CommandInteraction) {
     const playerMsg: string = pipe(
       interaction.options.get('player', false),
@@ -276,7 +267,7 @@ const playCardSlashCommand: SlashCommand = {
       getStringField(interaction)('card_name'),
       TE.fromEither,
       TE.chainW((name) =>
-        pipe(name, repo.getCard, TE.chainW(TE.fromOption(() => notFoundErrorOf(`Cannot find card with name: ${name}`))))
+        pipe(name, repo.getCard, TE.chainW(TE.fromOption(() => notFoundErrorOf(`找不到卡名為：${name}的卡片。`))))
       ),
       TE.map(
         (card) =>
@@ -296,17 +287,20 @@ const playCardSlashCommand: SlashCommand = {
   }
 }
 
-const deleteCardSlashCommand: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('delete_card')
-    .setDescription('Replies with the DELETED card information by given card name. (*) means required')
+const deleteCardSlashCommandSubCommand: SlashCommandSubCommand = {
+  data: new SlashCommandSubcommandBuilder()
+    .setName('delete')
+    .setDescription('從資料庫中刪除一張卡片，假如刪除成功，會回應被刪除卡牌的資訊。(*)代表必填。')
     .addStringOption((option) =>
-      option.setName('card_name').setDescription('(*) The card name you want to DELETE').setRequired(true)
+      option
+        .setName('card_name')
+        .setDescription('(*) 您想要刪除的卡片卡名，必須已被儲存在資料庫中，假如您想確認，請使用/card get_all。')
+        .setRequired(true)
     )
     .addStringOption((option) =>
       option
         .setName('delete_card_name')
-        .setDescription('(*) Should be the same as card_name, make sure you want to DELETE this card.')
+        .setDescription('(*) 必須與前面的{card_name}完全一致，確認您真的想要刪除這張卡片。')
         .setRequired(true)
     ),
 
@@ -320,17 +314,25 @@ const deleteCardSlashCommand: SlashCommand = {
           ? E.right(card_name)
           : E.left(
               invalidParameterErrorOf(
-                `card_name "${card_name}" is not the same as delete_card_name "${delete_card_name}"`
+                `card_name "${card_name}"與delete_card_name "${delete_card_name}"沒有完全一致，刪除動作取消。`
               )
             )
       ),
       TE.fromEither,
       TE.chainW((name) =>
-        pipe(
-          name,
-          repo.deleteCard,
-          TE.chainW(TE.fromOption(() => notFoundErrorOf(`Cannot find card with name: ${name}`)))
-        )
+        pipe(name, repo.deleteCard, TE.chainW(TE.fromOption(() => notFoundErrorOf(`找不到卡名為：${name}的卡片。`))))
+      ),
+      TE.map(
+        lodash.pick([
+          'name',
+          'cost',
+          'category',
+          'dream_category',
+          'description',
+          'createdTime',
+          'updatedTime',
+          'author'
+        ])
       ),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
@@ -340,11 +342,15 @@ const deleteCardSlashCommand: SlashCommand = {
   }
 }
 
-export const cardSlashCommands = [
-  getCardSlashCommand,
-  getAllCardSlashCommand,
-  postCardSlashCommand,
-  putCardSlashCommand,
-  playCardSlashCommand,
-  deleteCardSlashCommand
+const cardSlashCommandSubCommands = [
+  getCardSlashCommandSubCommand,
+  getAllCardSlashCommandSubCommand,
+  postCardSlashCommandSubCommand,
+  putCardSlashCommandSubCommand,
+  playCardSlashCommandSubCommand,
+  deleteCardSlashCommandSubCommand
 ]
+
+export const cardSlashCommandGroup = slashCommandGroupOf('card')('Commands that are related to the card base.')(
+  cardSlashCommandSubCommands
+)
