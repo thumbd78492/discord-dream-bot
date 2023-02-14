@@ -336,7 +336,7 @@ const deleteCardSlashCommandSubCommand: SlashCommandSubCommand = {
       ),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (card) => interaction.reply(JSON.stringify(card, null, 2))
+        (card) => interaction.reply('成功刪除卡牌： ' + JSON.stringify(card, null, 2))
       )
     )()
   }
