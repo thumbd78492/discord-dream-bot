@@ -1,9 +1,9 @@
-# forked from yubinTW/discord-typescript-demo
+# Forked from yubinTW/discord-typescript-demo
 
 # Discordjs with TypeScript
 
-This project is for TRPG.
-Use mongoDb to restore card information, player's character inforamtion, etc...
+This project is for a custom TRPG.  
+Use mongoDb to restore card information, player's character inforamtion, etc...  
 Use [discord.js](https://github.com/discordjs/discord.js) to create discord bot. This enable players to interact with db.
 
 ## Development
@@ -23,9 +23,7 @@ npm i
 
 ### Create your own mongodb
 
-```
-Reference: https://ithelp.ithome.com.tw/articles/10273876
-```
+Check reference: [ITHelp 使用 MongoDB -- 資料庫簡易上手](https://ithelp.ithome.com.tw/articles/10273876)
 
 ### Create your `.env`
 
