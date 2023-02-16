@@ -40,7 +40,7 @@ const getCharacter: SlashCommandSubCommand = {
         pipe(name, repo.getCharacter, TE.chainW(TE.fromOption(() => notFoundErrorOf(`找不到名稱為：${name}的角色。`))))
       ),
       TE.map(
-        lodash.pick(['name', 'body', 'sense', 'mind', 'socail', 'cardList', 'createdTime', 'updatedTime', 'author'])
+        lodash.pick(['name', 'body', 'sense', 'mind', 'social', 'cardList', 'createdTime', 'updatedTime', 'author'])
       ),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
@@ -98,7 +98,7 @@ const postCharacter: SlashCommandSubCommand = {
       E.bind('updatedTime', ({ createdTime }) => E.right(createdTime)),
       TE.fromEither,
       TE.chainW(repo.createCharacter),
-      TE.map(lodash.pick(['name', 'body', 'sense', 'mind', 'socail', 'cardList', 'createdTime', 'author'])),
+      TE.map(lodash.pick(['name', 'body', 'sense', 'mind', 'social', 'cardList', 'createdTime', 'author'])),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
         (character) => interaction.reply(JSON.stringify(character, null, 2))
