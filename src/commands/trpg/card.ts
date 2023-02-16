@@ -342,15 +342,11 @@ const deleteCardSlashCommandSubCommand: SlashCommandSubCommand = {
   }
 }
 
-const cardSlashCommandSubCommands = [
+export const cardSlashCommandGroup = slashCommandGroupOf('card')('Commands that are related to the card base.')([
   getCardSlashCommandSubCommand,
   getAllCardSlashCommandSubCommand,
   postCardSlashCommandSubCommand,
   putCardSlashCommandSubCommand,
   playCardSlashCommandSubCommand,
   deleteCardSlashCommandSubCommand
-]
-
-export const cardSlashCommandGroup = slashCommandGroupOf('card')('Commands that are related to the card base.')(
-  cardSlashCommandSubCommands
-)
+])

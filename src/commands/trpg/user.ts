@@ -1,5 +1,5 @@
 import { CommandInteraction, SlashCommandSubcommandBuilder } from 'discord.js'
-import { SlashCommandSubCommand } from '../../types/command'
+import { SlashCommandSubCommand, slashCommandGroupOf } from '../../types/command'
 import { pipe } from 'fp-ts/lib/function'
 import * as TE from 'fp-ts/lib/TaskEither'
 import * as IO from 'fp-ts/lib/IO'
@@ -56,3 +56,8 @@ const bind: SlashCommandSubCommand = {
     )()
   }
 }
+
+export const userSlashCommandGroup = slashCommandGroupOf('user')('Commands that are related to the discord user.')([
+  getMe,
+  bind
+])

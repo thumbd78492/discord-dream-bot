@@ -12,10 +12,11 @@ import { loginBot, setBotListener } from './bot'
 import { establishMongoConnection } from './plugins/mongo'
 import { pipe } from 'fp-ts/lib/function'
 import { cardSlashCommandGroup } from './commands/trpg/card'
-import { slashCommandGroupOf } from './types/command'
+import { characterSlashCommandGroup } from './commands/trpg/character'
+import { userSlashCommandGroup } from './commands/trpg/user'
 
 // register commands
-const commandGroup = [cardSlashCommandGroup]
+const commandGroup = [cardSlashCommandGroup, characterSlashCommandGroup, userSlashCommandGroup]
 
 // Read .env file (if exist)
 dotenv.config()

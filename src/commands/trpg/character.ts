@@ -106,3 +106,7 @@ const postCharacter: SlashCommandSubCommand = {
     )()
   }
 }
+
+export const characterSlashCommandGroup = slashCommandGroupOf('character')(
+  'Commands that are related to the character base.'
+)([getCharacter, getAllCharacters, postCharacter])
