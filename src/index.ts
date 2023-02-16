@@ -16,7 +16,7 @@ import { characterSlashCommandGroup } from './commands/trpg/character'
 import { userSlashCommandGroup } from './commands/trpg/user'
 
 // register commands
-const commandGroup = [cardSlashCommandGroup, characterSlashCommandGroup, userSlashCommandGroup]
+const commandGroups = [cardSlashCommandGroup, characterSlashCommandGroup, userSlashCommandGroup]
 
 // Read .env file (if exist)
 dotenv.config()
@@ -52,9 +52,9 @@ pipe(
   appConfig,
   TE.fromEither,
   TE.chainFirstW(establishMongoConnection),
-  TE.chainFirst(deploySlashCommands(commandGroup)),
+  TE.chainFirst(deploySlashCommands(commandGroups)),
   TE.chainFirst(loginBot(client)),
-  TE.chain(() => TE.of(setBotListener(client)(commandGroup))),
+  TE.chain(() => TE.of(setBotListener(client)(commandGroups))),
   TE.match(
     (e) => console.log(`${e._tag}: ${e.msg}`),
     () => console.log('Deploy commands and login successfully!')
