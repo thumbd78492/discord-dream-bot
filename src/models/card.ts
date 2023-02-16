@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { CardInDb } from '../types/card'
+import { CardInDb } from '../types/trpg/card'
 
 const cardSchema: mongoose.Schema = new mongoose.Schema(
   {

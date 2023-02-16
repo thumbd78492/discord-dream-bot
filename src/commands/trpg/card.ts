@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, CommandInteraction, EmbedBuilder, SlashCommandSubcommandBuilder } from 'discord.js'
-import { SlashCommand, SlashCommandSubCommand, slashCommandGroupOf } from '../types/command'
+import { SlashCommand, SlashCommandSubCommand, slashCommandGroupOf } from '../../types/command'
 import { pipe, flow, identity } from 'fp-ts/lib/function'
 import * as E from 'fp-ts/lib/Either'
 import * as O from 'fp-ts/lib/Option'
@@ -13,16 +13,16 @@ import {
   mongoErrorOf,
   notFoundErrorOf,
   parameterNotFoundErrorOf
-} from '../types/errors'
+} from '../../types/errors'
 import {
   ALL_CARD_CATEGORY_TUPLE,
   ALL_CARD_DREAM_CATEGORY_TUPLE,
   CardInput,
   cardCategoryOf,
   cardDreamCategoryOf
-} from '../types/card'
-import * as repo from '../repos/card'
-import { numberDecoder, stringDecoder } from '../decoder'
+} from '../../types/trpg/card'
+import * as repo from '../../repos/card'
+import { numberDecoder, stringDecoder } from '../../decoder'
 import {
   getStringField,
   getNumberField,
@@ -30,7 +30,7 @@ import {
   getOptionalNumberField,
   getOptionalStringField,
   getWithDefaultStringField
-} from './commandInteraction'
+} from '../commandInteraction'
 
 const getCardSlashCommandSubCommand: SlashCommandSubCommand = {
   data: new SlashCommandSubcommandBuilder()

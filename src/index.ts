@@ -11,7 +11,7 @@ import { AppConfig, readEnvironmentVariable, DiscordConfig, MongoConfig } from '
 import { loginBot, setBotListener } from './bot'
 import { establishMongoConnection } from './plugins/mongo'
 import { pipe } from 'fp-ts/lib/function'
-import { cardSlashCommandGroup } from './commands/card'
+import { cardSlashCommandGroup } from './commands/trpg/card'
 import { slashCommandGroupOf } from './types/command'
 
 // register commands

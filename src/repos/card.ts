@@ -3,7 +3,7 @@ import * as O from 'fp-ts/lib/Option'
 import { MongoError, ParameterError, mongoErrorOf, notFoundErrorOf, parameterNotFoundErrorOf } from '../types/errors'
 import CardModel from '../models/card'
 import { MongooseError } from 'mongoose'
-import { CardInDb, CardUpdateDb } from '../types/card'
+import { CardInDb, CardUpdateDb } from '../types/trpg/card'
 import { pipe } from 'fp-ts/lib/function'
 
 export const createCard: (createBody: CardInDb) => TE.TaskEither<MongoError, CardInDb> = (createBody) =>
