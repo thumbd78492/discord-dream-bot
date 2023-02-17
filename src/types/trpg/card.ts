@@ -22,7 +22,7 @@ export const ALL_CARD_CATEGORY_TUPLE = exhaustiveStringTuple<CardCategory>()(
 )
 export const cardCategoryOf: (cate: string) => E.Either<InvalidParameterError, CardCategory> = (cate) =>
   TSP.match(cate)
-    .with('體魄', '感知', '靈性', '社會', '衍生牌', '狀態牌', (x) => E.right(x))
+    .with(...ALL_CARD_CATEGORY_TUPLE, (x) => E.right(x))
     .otherwise((x) =>
       E.left(invalidParameterErrorOf(`card category should be one of: ${ALL_CARD_CATEGORY_TUPLE}, input: ${x}`))
     )
@@ -31,7 +31,7 @@ export type CardDreamCategory = '普通' | '美夢' | '惡夢'
 export const ALL_CARD_DREAM_CATEGORY_TUPLE = exhaustiveStringTuple<CardDreamCategory>()('普通', '美夢', '惡夢')
 export const cardDreamCategoryOf: (cate: string) => E.Either<InvalidParameterError, CardDreamCategory> = (cate) =>
   TSP.match(cate)
-    .with('普通', '美夢', '惡夢', (x) => E.right(x))
+    .with(...ALL_CARD_DREAM_CATEGORY_TUPLE, (x) => E.right(x))
     .otherwise((x) =>
       E.left(
         invalidParameterErrorOf(`card dream category should be one of: ${ALL_CARD_DREAM_CATEGORY_TUPLE}, input: ${x}`)

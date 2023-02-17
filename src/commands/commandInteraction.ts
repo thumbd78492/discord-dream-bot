@@ -39,6 +39,18 @@ export const getWithDefaultStringField: (
       E.map(O.match(() => defaultValue, identity))
     )
 
+export const getWithDefaultNumberField: (
+  interaction: CommandInteraction
+) => (fieldName: string) => (defaultValue: number) => E.Either<ParameterError, number> =
+  (interaction) => (fieldName) => (defaultValue) =>
+    pipe(
+      interaction.options.get(fieldName, false),
+      O.fromNullable,
+      O.map((cache) => numberDecoder(fieldName)(cache.value)),
+      O.traverse(E.Applicative)(identity),
+      E.map(O.match(() => defaultValue, identity))
+    )
+
 export const getOptionalStringField: (
   interaction: CommandInteraction
 ) => (fieldName: string) => E.Either<ParameterError, O.Option<string>> = (interaction) => (fieldName) =>

@@ -12,10 +12,12 @@ export const createCharacter: (createBody: CharacterInDb) => TE.TaskEither<Mongo
     (e) => mongoErrorOf((e as MongooseError).message)
   )
 
-export const getCharacter: (cardName: string) => TE.TaskEither<MongoError, O.Option<CharacterInDb>> = (cardName) =>
+export const getCharacter: (characterName: string) => TE.TaskEither<MongoError, O.Option<CharacterInDb>> = (
+  characterName
+) =>
   pipe(
     TE.tryCatch(
-      () => CharacterModel.findOne({ name: cardName }).exec(),
+      () => CharacterModel.findOne({ name: characterName }).exec(),
       (e) => mongoErrorOf((e as MongooseError).message)
     ),
     TE.map(O.fromNullable)
@@ -41,10 +43,12 @@ export const updateCharacter: (updateBody: CharacterUpdateDb) => TE.TaskEither<M
     TE.map(O.fromNullable)
   )
 
-export const deleteCharacter: (cardName: string) => TE.TaskEither<MongoError, O.Option<CharacterInDb>> = (cardName) =>
+export const deleteCharacter: (characterName: string) => TE.TaskEither<MongoError, O.Option<CharacterInDb>> = (
+  characterName
+) =>
   pipe(
     TE.tryCatch(
-      () => CharacterModel.findOneAndRemove({ name: cardName }).exec(),
+      () => CharacterModel.findOneAndRemove({ name: characterName }).exec(),
       (e) => mongoErrorOf((e as MongooseError).message)
     ),
     TE.map(O.fromNullable)
