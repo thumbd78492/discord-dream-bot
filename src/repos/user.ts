@@ -1,9 +1,10 @@
 import * as TE from 'fp-ts/lib/TaskEither'
 import * as O from 'fp-ts/lib/Option'
-import { MongoError, mongoErrorOf } from '../types/errors'
+import * as A from 'fp-ts/lib/Array'
+import { MongoError, MongoWarning, mongoErrorOf, mongoWarningOf } from '../types/errors'
 import UserModel from '../models/user'
-import { MongooseError } from 'mongoose'
-import { pipe } from 'fp-ts/lib/function'
+import { MongooseError, UpdateWriteOpResult } from 'mongoose'
+import { identity, pipe } from 'fp-ts/lib/function'
 import { UserInDb } from '../types/trpg/user'
 
 export const getUser: (discordId: string) => TE.TaskEither<MongoError, O.Option<UserInDb>> = (discordId) =>
@@ -21,4 +22,12 @@ export const createOrUpdateUser: (userBody: UserInDb) => TE.TaskEither<MongoErro
       () => UserModel.findOneAndUpdate({ discordId: userBody.discordId }, userBody, { upsert: true, new: true }).exec(),
       (e) => mongoErrorOf((e as MongooseError).message)
     )
+  )
+
+export const removeLinkedCharacter: (characterName: String) => TE.TaskEither<MongoWarning, UpdateWriteOpResult> = (
+  characterName
+) =>
+  TE.tryCatch(
+    () => UserModel.updateMany({ linkedCharacter: characterName }, { $set: { linkedCharacter: undefined } }).exec(),
+    (e) => mongoWarningOf((e as MongooseError).message)
   )

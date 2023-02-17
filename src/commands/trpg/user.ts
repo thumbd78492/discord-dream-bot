@@ -14,7 +14,11 @@ const getMe: SlashCommandSubCommand = {
     await pipe(
       interaction.user.id,
       repo.getUser,
-      TE.chainW(TE.fromOption(() => notFoundErrorOf(`你還未曾連結過角色，請使用/user bind {角色名稱}指令。`))),
+      TE.chainW(
+        TE.fromOption(() =>
+          notFoundErrorOf(`你還未曾連結過角色或連結過的角色已被刪除，請使用/user bind {角色名稱}指令。`)
+        )
+      ),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
         (user) => interaction.reply(`${user.name}正使用中的角色為：${user.linkedCharacter}`)

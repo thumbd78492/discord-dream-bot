@@ -15,15 +15,9 @@ import {
   parameterNotFoundErrorOf
 } from '../../types/errors'
 import * as repo from '../../repos/character'
+import * as userRepo from '../../repos/user'
 import { numberDecoder, stringDecoder } from '../../decoder'
-import {
-  getStringField,
-  getNumberField,
-  getOptionalBooleanField,
-  getOptionalNumberField,
-  getOptionalStringField,
-  getWithDefaultStringField
-} from '../commandInteraction'
+import { getStringField, getNumberField } from '../commandInteraction'
 
 const getCharacter: SlashCommandSubCommand = {
   data: new SlashCommandSubcommandBuilder()
@@ -102,6 +96,55 @@ const postCharacter: SlashCommandSubCommand = {
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
         (character) => interaction.reply(JSON.stringify(character, null, 2))
+      )
+    )()
+  }
+}
+
+const deleteCharacter: SlashCommandSubCommand = {
+  data: new SlashCommandSubcommandBuilder()
+    .setName('delete')
+    .setDescription('從資料庫中刪除一個角色，假如刪除成功，會回應被刪除角色的資訊。(*)代表必填。')
+    .addStringOption((option) =>
+      option
+        .setName('角色名稱')
+        .setDescription('(*) 您想要刪除的角色名稱，必須已被儲存在資料庫中，假如您想確認，請使用/card get_all。')
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('刪除角色名稱')
+        .setDescription('(*) 必須與前面的{角色名稱}完全一致，確認您真的想要刪除這張卡片。')
+        .setRequired(true)
+    ),
+
+  async execute(interaction: CommandInteraction) {
+    await pipe(
+      E.Do,
+      E.apS('character_name', getStringField(interaction)('角色名稱')),
+      E.apS('delete_character_name', getStringField(interaction)('刪除角色名稱')),
+      E.chain(({ character_name, delete_character_name }) =>
+        character_name === delete_character_name
+          ? E.right(character_name)
+          : E.left(
+              invalidParameterErrorOf(
+                `角色名稱 "${character_name}"與刪除角色名稱 "${delete_character_name}"沒有完全一致，刪除動作取消。`
+              )
+            )
+      ),
+      TE.fromEither,
+      TE.chainW((name) =>
+        pipe(
+          name,
+          repo.deleteCharacter,
+          TE.chainW(TE.fromOption(() => notFoundErrorOf(`找不到名稱為：${name}的角色。`))),
+          TE.chainFirstW((_) => userRepo.removeLinkedCharacter(name))
+        )
+      ),
+      TE.map(lodash.pick(['name', 'body', 'sense', 'mind', 'social', 'cardList', 'createdTime', 'author'])),
+      TE.match(
+        (e) => interaction.reply(`${e._tag}: ${e.msg}`),
+        (card) => interaction.reply('成功刪除卡牌： ' + JSON.stringify(card, null, 2))
       )
     )()
   }

@@ -72,6 +72,16 @@ export const mongoErrorOf: (msg: string) => MongoError = (msg) => ({
   msg
 })
 
+export type MongoWarning = {
+  _tag: 'MongoWarning'
+  msg: string
+}
+
+export const mongoWarningOf: (msg: string) => MongoWarning = (msg) => ({
+  _tag: 'MongoWarning',
+  msg
+})
+
 export type NotFoundError = {
   _tag: 'NotFoundError'
   msg: string

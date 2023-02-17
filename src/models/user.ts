@@ -5,7 +5,7 @@ const userSchema: mongoose.Schema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     discordId: { type: String, required: true, unique: true },
-    linkedCharacter: { type: String, required: true },
+    linkedCharacter: { type: String, required: false },
     updatedTime: { type: String, required: true }
   },
   {
