@@ -144,7 +144,7 @@ const deleteCharacter: SlashCommandSubCommand = {
       TE.map(lodash.pick(['name', 'body', 'sense', 'mind', 'social', 'cardList', 'createdTime', 'author'])),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (card) => interaction.reply('成功刪除卡牌： ' + JSON.stringify(card, null, 2))
+        (card) => interaction.reply('成功刪除角色： ' + JSON.stringify(card, null, 2))
       )
     )()
   }

@@ -83,7 +83,7 @@ const check: SlashCommandSubCommand = {
   async execute(interaction: CommandInteraction) {
     await pipe(
       E.Do,
-      E.apS('category', pipe(getWithDefaultStringField(interaction)('種類')('普通'), E.chainW(checkCategoryOf))),
+      E.apS('category', pipe(getWithDefaultStringField(interaction)('種類')('一般'), E.chainW(checkCategoryOf))),
       E.apS('revise', getWithDefaultNumberField(interaction)('修正值')(0)),
       TE.fromEither,
       TE.apSW(
@@ -120,11 +120,16 @@ const check: SlashCommandSubCommand = {
           .with('靈性', () => x.character.mind)
           .exhaustive()
 
-        return `${x.character.name} ${x.category}檢定結果：[${dice1}+${dice2}]${x.revise === 0 ? `` : `+${x.revise}`}${
-          abilityRevise === 0 ? `` : `+${abilityRevise}`
-        }=${dice1 + dice2 + x.revise + abilityRevise}`
+        return `${x.character.name} ${x.category}檢定結果：【${dice1}+${dice2}】${dice1 + dice2}${
+          x.revise === 0 ? `` : ` +【修正值】${x.revise}`
+        }${abilityRevise === 0 ? `` : ` +【${x.category}】${abilityRevise}`} = ${
+          dice1 + dice2 + x.revise + abilityRevise
+        }`
       }),
-      TE.match((e) => interaction.reply(`${e._tag}: ${e.msg}`), interaction.reply)
+      TE.match(
+        (e) => interaction.reply(`${e._tag}: ${e.msg}`),
+        (msg) => interaction.reply(msg)
+      )
     )()
   }
 }

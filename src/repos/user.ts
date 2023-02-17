@@ -10,7 +10,7 @@ import { UserInDb } from '../types/trpg/user'
 export const getUser: (discordId: string) => TE.TaskEither<MongoError, O.Option<UserInDb>> = (discordId) =>
   pipe(
     TE.tryCatch(
-      () => UserModel.findOne({ discordId: discordId }).exec(),
+      () => UserModel.findOne({ discordId: discordId }).lean().exec(),
       (e) => mongoErrorOf((e as MongooseError).message)
     ),
     TE.map(O.fromNullable)
