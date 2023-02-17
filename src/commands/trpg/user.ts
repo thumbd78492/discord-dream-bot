@@ -7,24 +7,19 @@ import * as TE from 'fp-ts/lib/TaskEither'
 import * as IO from 'fp-ts/lib/IO'
 import * as Rnd from 'fp-ts/lib/Random'
 import * as TSP from 'ts-pattern'
-import { NotFoundError, notFoundErrorOf } from '../../types/errors'
+import { NotFoundError, notFoundErrorOf, MongoError } from '../../types/errors'
 import * as repo from '../../repos/user'
 import * as charRepo from '../../repos/character'
 import { getStringField, getWithDefaultNumberField, getWithDefaultStringField } from '../commandInteraction'
 import { ALL_CHECK_CATEGORY_TUPLE, checkCategoryOf, UserInDb, UserWithLinkedCharacter } from '../../types/trpg/user'
+import { CharacterInDb } from '../../types/trpg/character'
 
 const getMe: SlashCommandSubCommand = {
   data: new SlashCommandSubcommandBuilder().setName('me').setDescription('告訴你目前連結的角色是誰。'),
   async execute(interaction: CommandInteraction) {
     await pipe(
-      interaction.user.id,
-      repo.getUser,
-      TE.chainW(
-        TE.fromOption(() =>
-          notFoundErrorOf(`你還未曾連結過角色或連結過的角色已被刪除，請使用/user bind {角色名稱}指令。`)
-        )
-      ),
-      TE.chainW(checkExistLinkedCharacterName),
+      interaction,
+      getUserWithLinkedCharacterByInteraction,
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
         (user) => interaction.reply(`${user.name}正使用中的角色為：${user.linkedCharacter}`)
@@ -86,29 +81,8 @@ const check: SlashCommandSubCommand = {
       E.apS('category', pipe(getWithDefaultStringField(interaction)('種類')('一般'), E.chainW(checkCategoryOf))),
       E.apS('revise', getWithDefaultNumberField(interaction)('修正值')(0)),
       TE.fromEither,
-      TE.apSW(
-        'user',
-        pipe(
-          interaction.user.id,
-          repo.getUser,
-          TE.chainW(
-            TE.fromOption(() =>
-              notFoundErrorOf(`你還未曾連結過角色或連結過的角色已被刪除，請使用/user bind {角色名稱}指令。`)
-            )
-          ),
-          TE.chainW(checkExistLinkedCharacterName)
-        )
-      ),
-      TE.bindW('character', ({ user }) =>
-        pipe(
-          charRepo.getCharacter(user.linkedCharacter),
-          TE.chainW(
-            TE.fromOption(() =>
-              notFoundErrorOf(`找不到名稱為：${user.linkedCharacter}的角色。可能有資料庫同步上的錯誤，請回報。`)
-            )
-          )
-        )
-      ),
+      TE.apSW('user', getUserWithLinkedCharacterByInteraction(interaction)),
+      TE.bindW('character', ({ user }) => getCharacterByUserWithLinkedCharacter(user)),
       TE.map((x) => {
         const dice1 = randint(1, 6)
         const dice2 = randint(1, 6)
@@ -153,4 +127,30 @@ const checkExistLinkedCharacterName: (user: UserInDb) => TE.TaskEither<NotFoundE
     user.linkedCharacter,
     TE.fromNullable(notFoundErrorOf(`你還未曾連結過角色或連結過的角色已被刪除，請使用/user bind {角色名稱}指令。`)),
     TE.map((linkedCharacter) => ({ ...user, linkedCharacter }))
+  )
+
+const getUserWithLinkedCharacterByInteraction: (
+  interaction: CommandInteraction
+) => TE.TaskEither<MongoError | NotFoundError, UserWithLinkedCharacter> = (interaction) =>
+  pipe(
+    interaction.user.id,
+    repo.getUser,
+    TE.chainW(
+      TE.fromOption(() =>
+        notFoundErrorOf(`你還未曾連結過角色或連結過的角色已被刪除，請使用/user bind {角色名稱}指令。`)
+      )
+    ),
+    TE.chainW(checkExistLinkedCharacterName)
+  )
+
+const getCharacterByUserWithLinkedCharacter: (
+  user: UserWithLinkedCharacter
+) => TE.TaskEither<MongoError | NotFoundError, CharacterInDb> = (user) =>
+  pipe(
+    charRepo.getCharacter(user.linkedCharacter),
+    TE.chainW(
+      TE.fromOption(() =>
+        notFoundErrorOf(`找不到名稱為：${user.linkedCharacter}的角色。可能有資料庫同步上的錯誤，請回報。`)
+      )
+    )
   )
