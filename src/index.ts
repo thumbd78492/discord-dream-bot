@@ -14,6 +14,7 @@ import { pipe } from 'fp-ts/lib/function'
 import { cardSlashCommandGroup } from './commands/trpg/card'
 import { characterSlashCommandGroup } from './commands/trpg/character'
 import { userSlashCommandGroup } from './commands/trpg/user'
+import { exit } from 'process'
 
 // register commands
 const commandGroups = [cardSlashCommandGroup, characterSlashCommandGroup, userSlashCommandGroup]
@@ -56,7 +57,10 @@ pipe(
   TE.chainFirst(loginBot(client)),
   TE.chain(() => TE.of(setBotListener(client)(commandGroups))),
   TE.match(
-    (e) => console.log(`${e._tag}: ${e.msg}`),
+    (e) => {
+      console.log(`${e._tag}: ${e.msg}`)
+      exit(-1)
+    },
     () => console.log('Deploy commands and login successfully!')
   )
 )()
