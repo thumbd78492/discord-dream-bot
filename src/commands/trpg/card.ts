@@ -326,10 +326,8 @@ const cardEmbedder: (card: CardInDb) => EmbedBuilder = (card) =>
   new EmbedBuilder()
     .setTitle(`${card.name} (${card.cost})`)
     .setDescription(card.description)
-    .addFields({ name: '\u200B', value: '\u200B' }) // blank field
     .addFields({ name: '屬性', value: card.category, inline: true })
     .addFields({ name: '夢屬性', value: card.dream_category, inline: true })
-    .addFields({ name: '\u200B', value: '\u200B' }) // blank field
     .setFooter({ text: `${card.author} last updated at ${card.updatedTime}` })
     .setColor(
       TSP.match(card.category)

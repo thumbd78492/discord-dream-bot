@@ -18,6 +18,7 @@ import * as repo from '../../repos/character'
 import * as userRepo from '../../repos/user'
 import { numberDecoder, stringDecoder } from '../../decoder'
 import { getStringField, getNumberField } from '../commandInteraction'
+import { CharacterInDb } from '../../types/trpg/character'
 
 const getCharacter: SlashCommandSubCommand = {
   data: new SlashCommandSubcommandBuilder()
@@ -33,12 +34,9 @@ const getCharacter: SlashCommandSubCommand = {
       TE.chainW((name) =>
         pipe(name, repo.getCharacter, TE.chainW(TE.fromOption(() => notFoundErrorOf(`找不到名稱為：${name}的角色。`))))
       ),
-      TE.map(
-        lodash.pick(['name', 'body', 'sense', 'mind', 'social', 'cardList', 'createdTime', 'updatedTime', 'author'])
-      ),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (character) => interaction.reply(JSON.stringify(character, null, 2))
+        (character) => interaction.reply({ embeds: [characterEmbedder(character)] })
       )
     )()
   }
@@ -53,7 +51,7 @@ const getAllCharacters: SlashCommandSubCommand = {
       repo.getCharacterNames(),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (character) => interaction.reply(character)
+        (name) => interaction.reply(name)
       )
     )()
   }
@@ -92,10 +90,9 @@ const postCharacter: SlashCommandSubCommand = {
       E.bind('updatedTime', ({ createdTime }) => E.right(createdTime)),
       TE.fromEither,
       TE.chainW(repo.createCharacter),
-      TE.map(lodash.pick(['name', 'body', 'sense', 'mind', 'social', 'cardList', 'createdTime', 'author'])),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (character) => interaction.reply(JSON.stringify(character, null, 2))
+        (character) => interaction.reply({ content: '成功建立角色。', embeds: [characterEmbedder(character)] })
       )
     )()
   }
@@ -141,14 +138,31 @@ const deleteCharacter: SlashCommandSubCommand = {
           TE.chainFirstW((_) => userRepo.removeLinkedCharacter(name))
         )
       ),
-      TE.map(lodash.pick(['name', 'body', 'sense', 'mind', 'social', 'cardList', 'createdTime', 'author'])),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (card) => interaction.reply('成功刪除角色： ' + JSON.stringify(card, null, 2))
+        (character) => interaction.reply({ content: '成功刪除角色。', embeds: [characterEmbedder(character)] })
       )
     )()
   }
 }
+
+const characterEmbedder: (character: CharacterInDb) => EmbedBuilder = (character) =>
+  new EmbedBuilder()
+    .setTitle(`${character.name}`)
+    .addFields(
+      { name: '體魄', value: character.body.toString(), inline: true },
+      { name: '感知', value: character.sense.toString(), inline: true }
+    )
+    .addFields({ name: '\u200B', value: '\u200B', inline: true }) // blank field
+    .addFields(
+      { name: '靈性', value: character.mind.toString(), inline: true },
+      { name: '社會', value: character.social.toString(), inline: true }
+    )
+    .addFields({ name: '\u200B', value: '\u200B', inline: true }) // blank field
+    .addFields({ name: '卡牌列表', value: '[]' })
+    .addFields({ name: '\u200B', value: '\u200B' }) // blank field
+    .setFooter({ text: `${character.author} last updated at ${character.updatedTime}` })
+    .setColor(0x0099ff)
 
 export const characterSlashCommandGroup = slashCommandGroupOf('character')(
   'Commands that are related to the character base.'
