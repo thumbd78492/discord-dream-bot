@@ -23,6 +23,7 @@ import {
 } from '../../types/trpg/card'
 import * as repo from '../../repos/card'
 import { numberDecoder, stringDecoder } from '../../decoder'
+import { CardInDb } from '../../types/trpg/card'
 import {
   getStringField,
   getNumberField,
@@ -31,6 +32,7 @@ import {
   getOptionalStringField,
   getWithDefaultStringField
 } from '../commandInteraction'
+import card from '../../models/card'
 
 const getCardSlashCommandSubCommand: SlashCommandSubCommand = {
   data: new SlashCommandSubcommandBuilder()
@@ -46,10 +48,10 @@ const getCardSlashCommandSubCommand: SlashCommandSubCommand = {
       TE.chainW((name) =>
         pipe(name, repo.getCard, TE.chainW(TE.fromOption(() => notFoundErrorOf(`Cannot find card with name: ${name}`))))
       ),
-      TE.map(lodash.pick(['name', 'cost', 'category', 'dream_category', 'description', 'createdTime', 'author'])),
+      TE.map(cardEmbedder),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (card) => interaction.reply(JSON.stringify(card, null, 2))
+        (embed) => interaction.reply({ embeds: [embed] })
       )
     )()
   }
@@ -112,10 +114,10 @@ const postCardSlashCommandSubCommand: SlashCommandSubCommand = {
       E.bind('updatedTime', ({ createdTime }) => E.right(createdTime)),
       TE.fromEither,
       TE.chainW(repo.createCard),
-      TE.map(lodash.pick(['name', 'cost', 'category', 'dream_category', 'description', 'createdTime', 'author'])),
+      TE.map(cardEmbedder),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (card) => interaction.reply(JSON.stringify(card, null, 2))
+        (embed) => interaction.reply({ content: '成功建立卡牌。', embeds: [embed] })
       )
     )()
   }
@@ -190,21 +192,10 @@ const putCardSlashCommandSubCommand: SlashCommandSubCommand = {
           TE.chainW(TE.fromOption(() => notFoundErrorOf(`找不到卡名為：${card.name}的卡片。`)))
         )
       ),
-      TE.map(
-        lodash.pick([
-          'name',
-          'cost',
-          'category',
-          'dream_category',
-          'description',
-          'createdTime',
-          'updatedTime',
-          'author'
-        ])
-      ),
+      TE.map(cardEmbedder),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (card) => interaction.reply(JSON.stringify(card, null, 2))
+        (embed) => interaction.reply({ content: '成功更新卡牌。', embeds: [embed] })
       )
     )()
   }
@@ -322,25 +313,32 @@ const deleteCardSlashCommandSubCommand: SlashCommandSubCommand = {
       TE.chainW((name) =>
         pipe(name, repo.deleteCard, TE.chainW(TE.fromOption(() => notFoundErrorOf(`找不到卡名為：${name}的卡片。`))))
       ),
-      TE.map(
-        lodash.pick([
-          'name',
-          'cost',
-          'category',
-          'dream_category',
-          'description',
-          'createdTime',
-          'updatedTime',
-          'author'
-        ])
-      ),
+      TE.map(cardEmbedder),
       TE.match(
         (e) => interaction.reply(`${e._tag}: ${e.msg}`),
-        (card) => interaction.reply('成功刪除卡牌： ' + JSON.stringify(card, null, 2))
+        (embed) => interaction.reply({ content: '成功刪除卡牌。', embeds: [embed] })
       )
     )()
   }
 }
+
+const cardEmbedder: (card: CardInDb) => EmbedBuilder = (card) =>
+  new EmbedBuilder()
+    .setTitle(`${card.name} (${card.cost})`)
+    .setDescription(card.description)
+    .addFields({ name: '屬性', value: card.category, inline: true })
+    .addFields({ name: '夢屬性', value: card.dream_category, inline: true })
+    .setFooter({ text: `${card.author} last updated at ${card.updatedTime}` })
+    .setColor(
+      TSP.match(card.category)
+        .with('體魄', () => 0x990000)
+        .with('感知', () => 0x073763)
+        .with('社會', () => 0xff9900)
+        .with('靈性', () => 0xf7f23f)
+        .with('衍生牌', () => 0x66666)
+        .with('狀態牌', () => 0x38761d)
+        .otherwise(() => 0x0000)
+    )
 
 export const cardSlashCommandGroup = slashCommandGroupOf('card')('Commands that are related to the card base.')([
   getCardSlashCommandSubCommand,
